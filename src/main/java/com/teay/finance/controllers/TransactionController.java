@@ -3,6 +3,9 @@ package com.teay.finance.controllers;
 import com.teay.finance.dtos.TransactionRequest;
 import com.teay.finance.entities.Transaction;
 import com.teay.finance.services.TransactionServiceImpl;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +22,11 @@ public class TransactionController {
         this.transactionServiceImpl = transactionServiceImpl;
     }
 
+    @Operation(summary = "Create Transaction")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Transaction Made"),
+            @ApiResponse(responseCode = "400", description = "Invalid Input")
+    })
     @PostMapping("/transactions")
     public ResponseEntity<Transaction> createTransaction(@Valid @RequestBody TransactionRequest request){
         return new ResponseEntity<>(transactionServiceImpl.createTransaction(request), HttpStatus.CREATED);
