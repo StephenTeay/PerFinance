@@ -8,6 +8,7 @@ import com.teay.finance.exceptions.TransactionException;
 import com.teay.finance.exceptions.TransactionNotFoundException;
 import com.teay.finance.exceptions.UserNotFoundException;
 import com.teay.finance.repositories.TransactionRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,7 +18,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 @Service
-public class TransactionServiceImpl implements TransactionService{
+public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final UserServiceImpl userServiceImpl;
     private final CategoryServiceImpl categoryServiceImpl;
@@ -30,29 +31,14 @@ public class TransactionServiceImpl implements TransactionService{
     }
 
     @Override
+    @Transactional
     public Transaction createTransaction(TransactionRequest request) {
-        if(request.getType().equals(Type.EXPENSE)){
-            if(validTransaction(request)){
-                Transaction newTransaction = new Transaction();
-                newTransaction.setAmount(request.getAmount());
-                userServiceImpl.updateUserBalance(request.getType(),request);
-                newTransaction.setCategory(categoryServiceImpl.findACategory(request.getCategoryId()));
-                newTransaction.setType(request.getType());
-                newTransaction.setToday(request.getToday());
-                newTransaction.setUser(userServiceImpl.getUser(request.getUserId()));
-                newTransaction.setDescription(request.getDescription());
-                transactionRepository.save(newTransaction);
-                return newTransaction;
-            }
-            else{
-                throw new TransactionException("You cannot make an expense beyond your balance");
-            }
-
-        }
-        else{
+        if (request.getType().equals(Type.EXPENSE) && !validTransaction(request)) {
+            throw new TransactionException("Insufficient Balance");
+        } else {
             Transaction newTransaction = new Transaction();
             newTransaction.setAmount(request.getAmount());
-            userServiceImpl.updateUserBalance(request.getType(),request);
+            userServiceImpl.updateUserBalance(request.getType(), request);
             newTransaction.setCategory(categoryServiceImpl.findACategory(request.getCategoryId()));
             newTransaction.setType(request.getType());
             newTransaction.setToday(request.getToday());
@@ -63,7 +49,7 @@ public class TransactionServiceImpl implements TransactionService{
         }
     }
 
-    public boolean validTransaction(TransactionRequest request){
+    public boolean validTransaction(TransactionRequest request) {
         User existingUser = userServiceImpl.getUser(request.getUserId());
         BigDecimal userBalance = existingUser.getBalance();
         BigDecimal transactionAmount = request.getAmount();
@@ -72,19 +58,18 @@ public class TransactionServiceImpl implements TransactionService{
     }
 
     @Override
-    public Transaction findTransaction( Long transactionId) {
-        return transactionRepository.findById(transactionId).orElseThrow(()-> new TransactionNotFoundException("Transaction doesn't exist"));
+    public Transaction findTransaction(Long transactionId) {
+        return transactionRepository.findById(transactionId).orElseThrow(() -> new TransactionNotFoundException("Transaction doesn't exist"));
     }
 
     @Override
     public Page<Transaction> findAllUserTransaction(Long userId, int page, int size) {
-        Optional <User> existingUser = userServiceImpl.findUser(userId);
-        if(existingUser.isEmpty()){
+        Optional<User> existingUser = userServiceImpl.findUser(userId);
+        if (existingUser.isEmpty()) {
             throw new UserNotFoundException("User doesn't exist");
-        }
-        else{
-            Pageable pageable = PageRequest.of(page,size);
-            return transactionRepository.findAllByUser(existingUser.get(),pageable);
+        } else {
+            Pageable pageable = PageRequest.of(page, size);
+            return transactionRepository.findAllByUser(existingUser.get(), pageable);
         }
 
     }

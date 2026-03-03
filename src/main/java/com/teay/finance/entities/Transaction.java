@@ -31,13 +31,13 @@ public class Transaction {
 
     public Transaction(){
     }
-    public Transaction(Type type, BigDecimal amount, String description, LocalDateTime time, User user, Category category){
+    public Transaction(Type type, BigDecimal amount, String description, User user, Category category){
         this.amount = amount;
         this.category = category;
         this.description = description;
         this.user = user;
         this.type = type;
-        this.today = time.now();
+        this.today = LocalDateTime.now();
     }
 
     public Type getType() {

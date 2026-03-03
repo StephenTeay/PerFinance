@@ -13,7 +13,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -25,7 +24,7 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryServiceImpl(UserRepository userRepository, TransactionRepository transactionRepository, CategoriesRepository categoriesRepository, UserRepository userRepository1) {
         this.transactionRepository = transactionRepository;
         this.categoriesRepository = categoriesRepository;
-        this.userRepository = userRepository1;
+        this.userRepository = userRepository;
     }
 
     @Override
