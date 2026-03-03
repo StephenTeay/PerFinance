@@ -1,14 +1,18 @@
 package com.teay.finance.services;
 
 import com.teay.finance.Type;
+import com.teay.finance.config.SecurityHelper;
 import com.teay.finance.dtos.TransactionRequest;
 import com.teay.finance.dtos.UserRequest;
 import com.teay.finance.entities.User;
 import com.teay.finance.exceptions.UserNotFoundException;
 import com.teay.finance.repositories.UserRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -69,8 +73,13 @@ public class UserServiceImpl implements UserService {
     }
 
     public BigDecimal getUserBalance(Long userId){
-        User existingUser = userRepository.findById(userId).orElseThrow(()-> new UserNotFoundException("User not Found"));
-        return existingUser.getBalance();
+        Long currentUserId = SecurityHelper.getCurrentUserId();
+        if(currentUserId != null && currentUserId.equals(userId)){
+            User existingUser = userRepository.findById(userId).orElseThrow(()-> new UserNotFoundException("User not Found"));
+            return existingUser.getBalance();
+        }
+        throw new AccessDeniedException("You can't view another user's balance. No sneaky business allowed!");
+
     }
 
     public User getUser(Long userId){
@@ -83,7 +92,7 @@ public class UserServiceImpl implements UserService {
             return jwtService.generateToken(request.getUsername()) ;
         }
 
-        return "Not authenticated";
+       throw new AuthenticationServiceException("User doesn't exist");
     }
 
 

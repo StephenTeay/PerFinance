@@ -1,6 +1,7 @@
 package com.teay.finance.services;
 
 import com.teay.finance.Type;
+import com.teay.finance.config.SecurityHelper;
 import com.teay.finance.dtos.TransactionRequest;
 import com.teay.finance.entities.Transaction;
 import com.teay.finance.entities.User;
@@ -12,6 +13,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -25,7 +27,6 @@ public class TransactionServiceImpl implements TransactionService {
 
     public TransactionServiceImpl(TransactionRepository transactionRepository, UserServiceImpl userServiceImpl, CategoryServiceImpl categoryServiceImpl) {
         this.transactionRepository = transactionRepository;
-
         this.userServiceImpl = userServiceImpl;
         this.categoryServiceImpl = categoryServiceImpl;
     }
@@ -59,20 +60,29 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public Transaction findTransaction(Long transactionId) {
-        return transactionRepository.findById(transactionId).orElseThrow(() -> new TransactionNotFoundException("Transaction doesn't exist"));
+        Long currentUser = SecurityHelper.getCurrentUserId();
+        Optional<Transaction> existingTransaction = transactionRepository.findById(transactionId);
+        if(existingTransaction.isPresent()){
+            Long userId = existingTransaction.get().getUser().getUserId();
+            if(currentUser != null && currentUser.equals(userId)){
+                return transactionRepository.findById(transactionId).orElseThrow(() -> new TransactionNotFoundException("Transaction doesn't exist"));
+            }
+        }
+        throw new AccessDeniedException("You can't view another user's transaction. Need help with something?");
+
     }
 
     @Override
     public Page<Transaction> findAllUserTransaction(Long userId, int page, int size) {
-        Optional<User> existingUser = userServiceImpl.findUser(userId);
-        if (existingUser.isEmpty()) {
-            throw new UserNotFoundException("User doesn't exist");
-        } else {
+        Long currentUser = SecurityHelper.getCurrentUserId();
+        if(currentUser != null  && currentUser.equals(userId)){
+            Optional<User> existingUser = userServiceImpl.findUser(userId);
             Pageable pageable = PageRequest.of(page, size);
             return transactionRepository.findAllByUser(existingUser.get(), pageable);
+            }
+        throw new AccessDeniedException("You can't view another user's transaction. Need help with something?");
         }
+
 
     }
 
-
-}
