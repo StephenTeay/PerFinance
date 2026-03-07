@@ -1,6 +1,8 @@
 package com.teay.finance.services;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecureDigestAlgorithm;
@@ -70,15 +72,8 @@ public class JwtService {
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails){
-        try{
-            final String username = getUsername(token);
-            return(username.equals(userDetails.getUsername()) && !isTokenExpired(token));
-        }
-        catch (ExpiredJwtException e){
-            throw new RuntimeException(e.getMessage());
-
-        }
-
+        final String username = getUsername(token);
+        return(username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
     private boolean isTokenExpired(String token) {

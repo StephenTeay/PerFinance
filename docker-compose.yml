@@ -1,0 +1,27 @@
+services:
+  app:
+    build: .
+    ports:
+      - "9091:8080"
+    networks:
+    - finance-network
+
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: finance
+      POSTGRES_PASSWORD: finance
+      POSTGRES_DB: financedb
+    ports:
+      - "5432:5432"
+    networks:
+      - finance-network
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+networks:
+  finance-network:
+    driver: bridge
+
+volumes:
+  postgres-data:

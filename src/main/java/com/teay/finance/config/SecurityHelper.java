@@ -14,6 +14,5 @@ public class SecurityHelper {
             }
         }
         return null;
-        //testing git revert
     }
 }
